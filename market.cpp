@@ -25,7 +25,9 @@ Order::Order(int norder_id,
     price = nprice; 
 }
 
-
+bool Order::is_filled() {
+    return !(quant>0);
+}
 
 /* Verification functions */
 bool verify_dealer_id(string dealer_id) {
@@ -71,9 +73,9 @@ void process_message(string message) {
    
     if(tokens[1] == "POST") post_command(tokens);
     else if(tokens[1] == "REVOKE") revoke_command(tokens);
-    /*
     else if(tokens[1] == "CHECK") check_command(tokens);
     else if(tokens[1] == "LIST") list_command(tokens);
+    /*
     else if(tokens[1] == "AGGRESS") aggress_command(tokens);
     */    
     else {
@@ -145,6 +147,66 @@ void revoke_command(vector<string> tokens) {
 
     order_map.erase(order_id);
     cout << ">" << order_id << " HAS BEEN REVOKED" << endl;
+    return;
+}
+
+void check_command(vector<string> tokens) {
+    
+    // Verify syntax
+    if(tokens.size() != 3) {
+        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        return;    
+    }
+    int order_id = stoi(tokens[2]);
+    if(order_map.find(order_id) == order_map.end()) {
+        cout << "ERROR: UNKNOWN_ORDER" << endl;
+        return;
+    }
+    
+    Order order = order_map.find(order_id)->second;
+    if(order.dealer_id != tokens[0]) {
+        cout << "ERROR: UNAUTHORIZED" << endl;
+        return;
+    }
+
+    if(order.is_filled()) cout << order_id << " HAS BEEN FILLED" << endl;    
+    else cout << ">" << get_order_info(order_id) << endl;
+    return;
+}
+
+void list_command(vector<string> tokens) {
+    
+    bool commodity_flag = false;
+    bool dealer_id_flag = false;
+
+    //Verify syntax
+    if(tokens.size() >= 3) {
+        if(!verify_commodity(tokens[2])) {
+            cout << ">ERROR: UNKNOWN_COMMODITY: " << tokens[2] << endl;        
+            return;
+        }
+        commodity_flag = true;
+    } 
+    if(tokens.size() >= 4) {
+        if(!verify_dealer_id(tokens[3])) {
+            cout << ">ERROR: UNKNOWN_DEALER_ID: " << tokens[3] << endl;        
+        }
+        dealer_id_flag = true;
+    }
+    if(tokens.size() > 4) {
+        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        return;
+    }
+
+    //Iterate through orders
+    for(unordered_map<int,Order>::iterator it = order_map.begin();
+        it != order_map.end(); ++it) {
+        Order order = it->second;
+        if((!commodity_flag || (commodity_flag && order.comm == tokens[2])) &&
+           (!dealer_id_flag || (dealer_id_flag && order.dealer_id == tokens[3])))
+            cout << ">" << get_order_info(it->first) << endl;
+    }
+    return;
 }
 
 /* Output functions */

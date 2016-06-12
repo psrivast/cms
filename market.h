@@ -30,7 +30,8 @@ public:
                 string ncomm, 
                 int nquant, 
                 double nprice);
-    
+    bool is_filled();
+
     int order_id;
     string side;
     string comm;
@@ -38,8 +39,6 @@ public:
     string dealer_id;
     double price;
 };
-
-
 
 /* Verification function */
 bool verify_dealer_id(string dealer_id);
@@ -52,6 +51,8 @@ void process_message(string message);
 /* Commands */
 void post_command(vector<string> tokens);
 void revoke_command(vector<string> tokens);
+void check_command(vector<string> tokens);
+void list_command(vector<string> tokens);
 
 /* Output */
 string get_order_info(int order_id);
