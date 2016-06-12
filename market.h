@@ -23,6 +23,8 @@ const string dealers[] = {
 
 class Order {
 public:
+    string dealer_id;
+    string comm;
 
     Order(int norder_id,
                 string ndealer_id, 
@@ -31,12 +33,14 @@ public:
                 int nquant, 
                 double nprice);
     bool is_filled();
+    bool is_trade_valid(int amount);
+    void make_trade(int amount);
+    string get_order_info();
 
+private:
     int order_id;
     string side;
-    string comm;
     int quant;
-    string dealer_id;
     double price;
 };
 
