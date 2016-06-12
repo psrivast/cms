@@ -8,6 +8,7 @@
 using namespace std;
 
 unordered_map<int, Order> order_map;
+int orders_count;
 
 /* Order function */
 Order::Order(int norder_id,
@@ -69,8 +70,8 @@ void process_message(string message) {
     }   
    
     if(tokens[1] == "POST") post_command(tokens);
-    /*
     else if(tokens[1] == "REVOKE") revoke_command(tokens);
+    /*
     else if(tokens[1] == "CHECK") check_command(tokens);
     else if(tokens[1] == "LIST") list_command(tokens);
     else if(tokens[1] == "AGGRESS") aggress_command(tokens);
@@ -115,11 +116,35 @@ void post_command(vector<string> tokens) {
     }
     
     // Create order
-    Order new_order(order_map.size()+1,tokens[0],tokens[2],tokens[3],stoi(tokens[4]),stod(tokens[5]));    
-    pair<int,Order> order_pair(order_map.size()+1, new_order);    
+    orders_count++;
+    Order new_order(orders_count,tokens[0],tokens[2],tokens[3],stoi(tokens[4]),stod(tokens[5]));    
+    pair<int,Order> order_pair(orders_count, new_order);    
     order_map.insert(order_pair);
-    cout << get_order_info(order_map.size()) << endl;
+    cout << ">" << get_order_info(orders_count) << " HAS BEEN POSTED" << endl;
     return;
+}
+
+void revoke_command(vector<string> tokens) {
+    
+    // Verify syntax
+    if(tokens.size() != 3) {
+        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        return;    
+    }
+    int order_id = stoi(tokens[2]);
+    if(order_map.find(order_id) == order_map.end()) {
+        cout << "ERROR: UNKNOWN_ORDER" << endl;
+        return;
+    }
+    
+    Order order = order_map.find(order_id)->second;
+    if(order.dealer_id != tokens[0]) {
+        cout << "ERROR: UNAUTHORIZED" << endl;
+        return;
+    }
+
+    order_map.erase(order_id);
+    cout << ">" << order_id << " HAS BEEN REVOKED" << endl;
 }
 
 /* Output functions */
@@ -134,6 +159,8 @@ string get_order_info(int order_id) {
 
 int main() {
    
+    orders_count = 0;
+
     while (true) {
         string message;
         getline(cin, message);

@@ -49,8 +49,9 @@ bool verify_commodity(string commodity);
 /* Message processing */
 void process_message(string message);
 
-/* POST */
+/* Commands */
 void post_command(vector<string> tokens);
+void revoke_command(vector<string> tokens);
 
 /* Output */
 string get_order_info(int order_id);
