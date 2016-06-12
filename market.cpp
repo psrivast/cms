@@ -2,9 +2,29 @@
 #include <iterator>
 #include <vector>
 #include <sstream>
+#include <unordered_map>
 #include "market.h"
 
 using namespace std;
+
+unordered_map<int, Order> order_map;
+
+/* Order function */
+Order::Order(int norder_id,
+                string ndealer_id, 
+                string nside,
+                string ncomm, 
+                int nquant, 
+                double nprice) {
+    dealer_id = ndealer_id;
+    order_id = norder_id;
+    side = nside;
+    comm = ncomm;
+    quant = nquant;
+    price = nprice; 
+}
+
+
 
 /* Verification functions */
 bool verify_dealer_id(string dealer_id) {
@@ -29,7 +49,6 @@ bool verify_commodity(string commodity) {
     return false;
 
 }
-
 
 void process_message(string message) {
     vector<string> tokens;
@@ -69,6 +88,48 @@ void process_message(string message) {
 }
 
 void post_command(vector<string> tokens) {
+    
+    // Verify syntax     
+    if(tokens.size() != 6) {
+        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        return;    
+    }
+    if(!verify_side(tokens[2])) {
+        cout << "ERROR: INVALID_MESSAGE: unknown side: " << tokens[2] << endl;
+        return;
+    }
+
+    if(!verify_commodity(tokens[3])) {
+        cout << "ERROR: UNKNOWN_COMMODITY: " << tokens[3] << endl;
+        return;
+    }
+
+    if(stoi(tokens[4]) <= 0) {
+        cout << "ERROR: INVALID_MESSAGE: quantity must be greater than 0" << endl;
+        return;
+    }
+    
+    if(stod(tokens[5]) <= 0.0) {
+        cout << "ERROR: INVALID_MESSAGE: price must be greater than 0.0" << endl;
+        return;
+    }
+    
+    // Create order
+    Order new_order(order_map.size()+1,tokens[0],tokens[2],tokens[3],stoi(tokens[4]),stod(tokens[5]));    
+    pair<int,Order> order_pair(order_map.size()+1, new_order);    
+    order_map.insert(order_pair);
+    cout << get_order_info(order_map.size()) << endl;
+    return;
+}
+
+/* Output functions */
+string get_order_info(int order_id) {
+    
+    Order order = order_map.find(order_id) -> second;
+    string order_info = to_string(order.order_id) + " " + order.dealer_id + 
+                        " " + order.side + " " + order.comm + " " + 
+                        to_string(order.quant) + " " + to_string(order.price);
+    return order_info;    
 }
 
 int main() {

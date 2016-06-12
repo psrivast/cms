@@ -1,4 +1,3 @@
-
 using namespace std;
 
 const string sides[] = {
@@ -24,6 +23,14 @@ const string dealers[] = {
 
 class Order {
 public:
+
+    Order(int norder_id,
+                string ndealer_id, 
+                string nside,
+                string ncomm, 
+                int nquant, 
+                double nprice);
+    
     int order_id;
     string side;
     string comm;
@@ -31,6 +38,8 @@ public:
     string dealer_id;
     double price;
 };
+
+
 
 /* Verification function */
 bool verify_dealer_id(string dealer_id);
@@ -42,3 +51,6 @@ void process_message(string message);
 
 /* POST */
 void post_command(vector<string> tokens);
+
+/* Output */
+string get_order_info(int order_id);
