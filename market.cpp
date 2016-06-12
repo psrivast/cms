@@ -82,12 +82,12 @@ void process_message(string message) {
         back_inserter(tokens));    
     
     if(tokens.size() < 2) {
-        cout << "ERROR: Invalid message" << endl;  
+        cout << ">ERROR: Invalid message" << endl;  
         return;    
     }
     
     if(!verify_dealer_id(tokens[0])) {
-        cout << "ERROR: Unkonwn Dealer: " << tokens[0] << endl;
+        cout << ">ERROR: Unkonwn Dealer: " << tokens[0] << endl;
         return;
     }   
    
@@ -97,41 +97,37 @@ void process_message(string message) {
     else if(tokens[1] == "LIST") list_command(tokens);
     else if(tokens[1] == "AGGRESS") aggress_command(tokens);
     else {
-        cout << "ERROR: Invalid Message: Unknown command " << tokens[1] << endl;
+        cout << ">ERROR: Invalid Message: Unknown command " << tokens[1] << endl;
         return; 
     }   
-     
-    /*
-    for(vector<int>::size_type i = 0; i < tokens.size(); i++) {
-        cout << tokens[i] << " | ";    
-    }
-    */
+
+    return; 
 }
 
 void post_command(vector<string> tokens) {
     
     // Verify syntax     
     if(tokens.size() != 6) {
-        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        cout << ">ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
         return;    
     }
     if(!verify_side(tokens[2])) {
-        cout << "ERROR: INVALID_MESSAGE: unknown side: " << tokens[2] << endl;
+        cout << ">ERROR: INVALID_MESSAGE: unknown side: " << tokens[2] << endl;
         return;
     }
 
     if(!verify_commodity(tokens[3])) {
-        cout << "ERROR: UNKNOWN_COMMODITY: " << tokens[3] << endl;
+        cout << ">ERROR: UNKNOWN_COMMODITY: " << tokens[3] << endl;
         return;
     }
 
     if(stoi(tokens[4]) <= 0) {
-        cout << "ERROR: INVALID_MESSAGE: quantity must be greater than 0" << endl;
+        cout << ">ERROR: INVALID_MESSAGE: quantity must be greater than 0" << endl;
         return;
     }
     
     if(stod(tokens[5]) <= 0.0) {
-        cout << "ERROR: INVALID_MESSAGE: price must be greater than 0.0" << endl;
+        cout << ">ERROR: INVALID_MESSAGE: price must be greater than 0.0" << endl;
         return;
     }
     
@@ -148,18 +144,18 @@ void revoke_command(vector<string> tokens) {
     
     // Verify syntax
     if(tokens.size() != 3) {
-        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        cout << ">ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
         return;    
     }
     int order_id = stoi(tokens[2]);
     if(order_map.find(order_id) == order_map.end()) {
-        cout << "ERROR: UNKNOWN_ORDER" << endl;
+        cout << ">ERROR: UNKNOWN_ORDER" << endl;
         return;
     }
     
     Order order = order_map.find(order_id)->second;
     if(order.dealer_id != tokens[0]) {
-        cout << "ERROR: UNAUTHORIZED" << endl;
+        cout << ">ERROR: UNAUTHORIZED" << endl;
         return;
     }
 
@@ -172,18 +168,18 @@ void check_command(vector<string> tokens) {
     
     // Verify syntax
     if(tokens.size() != 3) {
-        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        cout << ">ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
         return;    
     }
     int order_id = stoi(tokens[2]);
     if(order_map.find(order_id) == order_map.end()) {
-        cout << "ERROR: UNKNOWN_ORDER" << endl;
+        cout << ">ERROR: UNKNOWN_ORDER" << endl;
         return;
     }
     
     Order order = order_map.find(order_id)->second;
     if(order.dealer_id != tokens[0]) {
-        cout << "ERROR: UNAUTHORIZED" << endl;
+        cout << ">ERROR: UNAUTHORIZED" << endl;
         return;
     }
 
@@ -212,7 +208,7 @@ void list_command(vector<string> tokens) {
         dealer_id_flag = true;
     }
     if(tokens.size() > 4) {
-        cout << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        cout << ">ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
         return;
     }
 
@@ -220,7 +216,8 @@ void list_command(vector<string> tokens) {
     for(unordered_map<int,Order>::iterator it = order_map.begin();
         it != order_map.end(); ++it) {
         Order order = it->second;
-        if((!commodity_flag || (commodity_flag && order.comm == tokens[2])) &&
+        if((!order.is_filled()) &&
+           (!commodity_flag || (commodity_flag && order.comm == tokens[2])) &&
            (!dealer_id_flag || (dealer_id_flag && order.dealer_id == tokens[3])))
             cout << ">" << get_order_info(it->first) << endl;
     }
@@ -232,12 +229,11 @@ void aggress_command(vector<string> tokens) {
 
     //Verify syntax
     if(tokens.size() < 3 || tokens.size() % 2 != 0) {
-        cout << ">" << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        cout << ">" << ">ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
         return;
     }
    
     int num_trades = (tokens.size()-2)/2;
-    cout << "Number of trades: " << num_trades << endl; 
     pair<int, int> *trades = new pair<int,int>[num_trades];
     for(int i=2; i < tokens.size()-1; i+=2) {
         trades[(i-2)/2] = make_pair(stoi(tokens[i]),stoi(tokens[i+1]));
@@ -246,12 +242,12 @@ void aggress_command(vector<string> tokens) {
     // First iteration to confirm all trades valid 
     for(int i=0; i < num_trades; i++) { 
         if(order_map.find(trades[i].first) == order_map.end()) {
-            cout << "ERROR: UNKNOWN_ORDER" << endl;
+            cout << ">ERROR: UNKNOWN_ORDER" << endl;
             return;
         }
         Order order = order_map.find(trades[i].first)->second;
         if(!(order_map.find(trades[i].first)->second).is_trade_valid(trades[i].second)) {    
-            cout << ">" << "ERROR: INVALID_MESSAGE: invalid trade" << endl;
+            cout << ">ERROR: INVALID_MESSAGE: invalid trade" << endl;
             return;
         } 
     }
@@ -273,12 +269,11 @@ string make_trade(pair<int,int> trade) {
 int main() {
    
     orders_count = 0;
-
-    while (true) {
-        string message;
-        getline(cin, message);
+    string message;
+    while (getline(cin,message)) {
         process_message(message);
     }
+    exit(0);
     
     return 0;
 }
