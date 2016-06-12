@@ -29,6 +29,26 @@ bool Order::is_filled() {
     return !(quant>0);
 }
 
+bool Order::is_trade_valid(int amount) {
+    return quant >= amount;
+}
+
+string Order::make_trade(int amount) {
+    quant -= amount;
+
+    //trade report
+    string action = (side == "BUY") ? "SOLD" : "BOUGHT";
+    return action + " " + to_string(amount) + " " + comm + " @ " + to_string(price) + 
+            " FROM " + dealer_id; 
+}
+
+string Order::get_order_info() {
+     return to_string(order_id) + " " + dealer_id + 
+                        " " + side + " " + comm + " " + 
+                        to_string(quant) + " " + to_string(price);   
+}
+ 
+
 /* Verification functions */
 bool verify_dealer_id(string dealer_id) {
     for(int i = 0; i < sizeof(dealers)/sizeof(*dealers); i++) {
@@ -75,9 +95,7 @@ void process_message(string message) {
     else if(tokens[1] == "REVOKE") revoke_command(tokens);
     else if(tokens[1] == "CHECK") check_command(tokens);
     else if(tokens[1] == "LIST") list_command(tokens);
-    /*
     else if(tokens[1] == "AGGRESS") aggress_command(tokens);
-    */    
     else {
         cout << "ERROR: Invalid Message: Unknown command " << tokens[1] << endl;
         return; 
@@ -209,14 +227,47 @@ void list_command(vector<string> tokens) {
     return;
 }
 
+void aggress_command(vector<string> tokens) {
+    int trade_count = 0;
+
+    //Verify syntax
+    if(tokens.size() < 3 || tokens.size() % 2 != 0) {
+        cout << ">" << "ERROR: INVALID_MESSAGE: incorrect number of arguments" << endl;
+        return;
+    }
+   
+    int num_trades = (tokens.size()-2)/2;
+    cout << "Number of trades: " << num_trades << endl; 
+    pair<int, int> *trades = new pair<int,int>[num_trades];
+    for(int i=2; i < tokens.size()-1; i+=2) {
+        trades[(i-2)/2] = make_pair(stoi(tokens[i]),stoi(tokens[i+1]));
+    }
+   
+    // First iteration to confirm all trades valid 
+    for(int i=0; i < num_trades; i++) { 
+        if(order_map.find(trades[i].first) == order_map.end()) {
+            cout << "ERROR: UNKNOWN_ORDER" << endl;
+            return;
+        }
+        Order order = order_map.find(trades[i].first)->second;
+        if(!(order_map.find(trades[i].first)->second).is_trade_valid(trades[i].second)) {    
+            cout << ">" << "ERROR: INVALID_MESSAGE: invalid trade" << endl;
+            return;
+        } 
+    }
+
+    for(int i=0; i < num_trades; i++) { 
+        cout << ">" << make_trade(trades[i]) << endl;
+    }
+}
+
 /* Output functions */
-string get_order_info(int order_id) {
-    
-    Order order = order_map.find(order_id) -> second;
-    string order_info = to_string(order.order_id) + " " + order.dealer_id + 
-                        " " + order.side + " " + order.comm + " " + 
-                        to_string(order.quant) + " " + to_string(order.price);
-    return order_info;    
+string get_order_info(int order_id) { 
+    return (order_map.find(order_id) -> second).get_order_info();
+}
+
+string make_trade(pair<int,int> trade) {
+    return (order_map.find(trade.first)->second).make_trade(trade.second); 
 }
 
 int main() {

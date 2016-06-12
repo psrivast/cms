@@ -34,7 +34,7 @@ public:
                 double nprice);
     bool is_filled();
     bool is_trade_valid(int amount);
-    void make_trade(int amount);
+    string make_trade(int amount);
     string get_order_info();
 
 private:
@@ -57,6 +57,8 @@ void post_command(vector<string> tokens);
 void revoke_command(vector<string> tokens);
 void check_command(vector<string> tokens);
 void list_command(vector<string> tokens);
+void aggress_command(vector<string> tokens);
 
 /* Output */
 string get_order_info(int order_id);
+string make_trade(pair<int,int> trade);
