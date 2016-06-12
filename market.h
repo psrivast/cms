@@ -18,7 +18,12 @@ const string dealers[] = {
     "JPM",
     "UBS",
     "RBC",
-    "BARX"
+    "BARX",
+    "MS",
+    "CITI",
+    "BOFA",
+    "RBS",
+    "HSBC"
 };
 
 class Order {
