@@ -25,6 +25,11 @@ Run cms function
 $ ./cms base
 ```
 
+Run with test input from file
+```sh
+$ ./cms base < tests/test1.txt
+```
+
 ## Design
 ##### Order map
 - Used unordered_map<int, Order> data type to map order_id to Orders
